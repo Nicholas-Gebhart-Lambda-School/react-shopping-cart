@@ -1,15 +1,25 @@
+import React from 'react';
+
 export default (key, initialValue) => {
-  if (typeof key !== 'string') {
-    throw new Error('key must be a string');
-  }
   const [storedValue, setStoredValue] = React.useState(() => {
-    const local = localStorage.getItem(key);
-    return local ? JSON.parse(local) : initialValue;
+    try {
+      const item = window.localStorage.getItem(key);
+      return item ? JSON.parse(item) : initialValue;
+    } catch (error) {
+      return initialValue;
+    }
   });
 
   const setValue = value => {
-    localStorage.setItem(key, JSON.stringify(value));
-    setStoredValue(value);
+    try {
+      const valueToStore =
+        value instanceof Function ? value(storedValue) : value;
+      setStoredValue(valueToStore);
+      window.localStorage.setItem(key, JSON.stringify(valueToStore));
+    } catch (error) {
+      throw new Error(error);
+    }
   };
+
   return [storedValue, setValue];
 };
